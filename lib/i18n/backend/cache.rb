@@ -39,6 +39,8 @@ module I18n
   class << self
     @@cache_store = nil
     @@cache_namespace = nil
+    @@cache_version = nil
+    @@cache_version_time = nil
     CACHE_VERSION_FETCH_INTERVAL = 5.seconds
 
     def cache_store
