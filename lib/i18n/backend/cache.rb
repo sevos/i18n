@@ -58,7 +58,7 @@ module I18n
     end
 
     def cache_version
-      @@cache_version = nil if @@cache_version_time && @@cache_version_time + CACHE_VERSION_FETCH_INTERVAL > Time.now
+      @@cache_version = nil unless @@cache_version_time && @@cache_version_time + CACHE_VERSION_FETCH_INTERVAL > Time.now
       unless @@cache_version
         @@cache_version = I18n.cache_store.read("i18n-version") || I18n.cache_store.write("i18n-version", 0) && I18n.cache_store.read("i18n-version")
         @@cache_version_time = Time.now
