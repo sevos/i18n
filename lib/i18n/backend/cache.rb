@@ -39,6 +39,7 @@ module I18n
   class << self
     @@cache_store = nil
     @@cache_namespace = nil
+    CACHE_VERSION_FETCH_INTERVAL = 5.seconds
 
     def cache_store
       @@cache_store
@@ -54,6 +55,19 @@ module I18n
 
     def cache_namespace=(namespace)
       @@cache_namespace = namespace
+    end
+
+    def cache_version
+      @@cache_version = nil if @@cache_version_time && @@cache_version_time + CACHE_VERSION_FETCH_INTERVAL > Time.now
+      unless @@cache_version
+        @@cache_version = I18n.cache_store.read("i18n-version") || I18n.cache_store.write("i18n-version", 0) && I18n.cache_store.read("i18n-version")
+        @@cache_version_time = Time.now
+      end
+      @@cache_version
+    end
+
+    def cache_invalidate!
+      I18n.cache_store.increment("i18n-version")
     end
 
     def perform_caching?
@@ -87,7 +101,7 @@ module I18n
           # Also, in Ruby < 1.8.7 {}.hash != {}.hash
           # (see http://paulbarry.com/articles/2009/09/14/why-rails-3-will-require-ruby-1-8-7)
           # If args.inspect does not work for you for some reason, patches are very welcome :)
-          ['i18n', I18n.cache_namespace, locale, key.hash, RUBY_VERSION >= "1.8.7" ? options.hash : options.inspect.hash].join('/')
+          ['i18n', I18n.cache_namespace, locale, key.hash, RUBY_VERSION >= "1.8.7" ? options.hash : options.inspect.hash, I18n.cache_version].join('/')
         end
     end
   end
