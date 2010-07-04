@@ -60,9 +60,12 @@ module I18n
     end
 
     def cache_version
-      @@cache_version = nil unless @@cache_version_time && @@cache_version_time + CACHE_VERSION_FETCH_INTERVAL > Time.now
+      unless @@cache_version_time && @@cache_version_time + CACHE_VERSION_FETCH_INTERVAL > Time.now
+        cache_version_initialize
+        @@cache_version = nil
+      end
       unless @@cache_version
-        @@cache_version = I18n.cache_store.read("i18n-version") || I18n.cache_store.write("i18n-version", 0) && I18n.cache_store.read("i18n-version")
+        @@cache_version = I18n.cache_store.read("i18n-version", :raw => true).to_i
         @@cache_version_time = Time.now
       end
       @@cache_version
@@ -70,6 +73,12 @@ module I18n
 
     def cache_invalidate!
       I18n.cache_store.increment("i18n-version")
+    end
+
+    def cache_version_initialize
+      unless I18n.cache_store.read("i18n-version", :raw => true)
+        I18n.cache_store.write("i18n-version", 0, :raw => true)
+      end
     end
 
     def perform_caching?
